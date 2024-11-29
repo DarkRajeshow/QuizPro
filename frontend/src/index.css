@@ -1,0 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Parkinsans:wght@300..800&family=Playwrite+GB+S:ital,wght@0,100..400;1,100..400&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+body{
+    @apply min-h-screen w-screen
+}
+
+* {
+    font-family: "Parkinsans";
+    @apply font-medium p-0 m-0
+  }
+
+input, textarea{
+    @apply bg-zinc-100/60 outline-none border-2 focus:border-zinc-500 rounded-none px-2 py-2
+}
+
+button{
+    @apply text-white font-medium text-sm transition-all px-4 py-2 rounded-sm
+}
+
+td{
+  @apply bg-zinc-50 border-2 border-zinc-300
+}
+
+th{
+    @apply border-zinc-300 border-2
+}

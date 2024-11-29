@@ -1,0 +1,101 @@
+# In backend directory
+npx prisma generate
+npx prisma migrate dev --name init
+
+
+
+
+
+# Email
+
+We are pleased to provide an opportunity to you to participate in a sponsored project. You will be creating a online Quiz Maker. The project duration is of 1 month. This is the maximum duration that the project may take. If you commit more time, you should be able to complete the project much sooner.
+
+ 
+
+Please refer the following quiz websites to understand this project. This will help you get a better idea of the features that you will be developing. Try to understand the UI as well as the functionality of these products. You will need to try the features. Think which features you would like to include in your Online Quiz Maker site. Do not worry about implementing all features. Select the basic features you would like to include in your online quiz maker. We suggest you include the multiple-choice option for your quiz maker. Next, select 2 advanced features.
+
+ 
+
+·         https://www.quiz-maker.com/
+
+·         https://www.opinionstage.com/quiz/
+
+·         https://testmoz.com/
+
+ 
+
+ 
+
+Project Submissions:
+
+You are required to submit designs, UI screenshots and code. Divide your project duration in the five different submissions according to the time required to complete in each submission work.  You need to compress all data into a zip file and send it by e-mail projects@webtechdevelopers.com .  You should send the submission after every few days.  Please be punctual about the time. If you are not able to submit your work due to any reason, please inform us.
+
+ 
+
+ 
+
+Submission 1:
+
+ 
+
+Start by creating a design for your version of an Online Quiz Maker. Create a sample UI showing the layout using Visual Studio Code with React, Typescript, and Tailwind CSS. You do not need to create the marketing pages. Focus on the web app design.  The UI must be clickable so that we can navigate each page. You must include both the quiz creation by the admin and the user view of quiz taking. The UI should include all of the basic features and the 2 advanced features you selected.
+
+ 
+
+Submission 2:
+
+Try to finish working on your UI samples. Read articles on UI Layouts and perfect all your screen layouts. All navigation between pages should be working. The backend will use NodeJS and Express. Start working on basic functionalities such as quiz creation, scoring, and quiz question types such as multiple choice, fill in the blank, or true/false. These are just few of the common features needed. You will need to decide your own feature set.
+
+ 
+
+ 
+
+Submission 3:
+
+Continue working on basic functionalities of the applications. Implement the basic features such as user registration, and input validation on the different types of questions. Finalize the database structure to store the quizzes, user registration, quiz results, etc. Test each functionality that you have created. Any additional functionality you have planned to include should be part of your implementation.
+
+ 
+
+Submission 4:
+
+ 
+
+Now you will be adding some admin features you would like to have in your Online Quiz Maker. Create a setting section for each quiz - choose several of the following items to include: you can keep feature for limiting the number of times the quiz can be taken by a user, start and expiration dates for the quiz, and a time limit to complete the quiz. Work according to the feature set you have created in your UI design. Test all the scenarios related to the admin features and make sure it will not affect previous implementation.
+
+ 
+
+Submission 5:
+
+ 
+
+Finish all the implementation part and check the UI related to all features you have created in the project.   Once all the implementation part is finished then test overall functionality of the application. Finalize your project for submission.
+
+ 
+
+ 
+
+IDE:                              Visual Studio Code
+
+Technology:                NodeJS v20 LTS with TypeScript and Express v4.18
+
+Front-end:                  React JS, Typescript, and Tailwind CSS
+
+Database:                   PostgreSQL
+
+ 
+
+BEFORE joining the first project meeting, configure your Visual Studio Code to use NodeJS & ReactJS for web development. Install PostgreSQL, and install ExpressJS and Tailwind CSS. If you are unable to do this installation for some reason the trainers will assist you during the project meeting.
+
+ 
+
+Note: Don't use third party components (DLLs, code etc.) or try to copy the code. You can take reference only for reading purpose.
+
+ 
+
+This sponsored project is designed to help us understand your learning ability. While working on the project do not take help from your friends or seniors. Also, please do not copy code from the Internet. You may use resources on the Internet for the purpose of learning good coding techniques. Copying code is not allowed. You should work on this project honestly and independently.  If you are not able to complete this project please let us know.
+
+ 
+
+Please review this e-mail properly and try to understand the project. Make a list of your doubts. Please join meeting room at 7:00 pm tomorrow. We will discuss the project including doubts you are having.
+
+ 
