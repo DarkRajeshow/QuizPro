@@ -1,11 +1,16 @@
 # Node modules
-backend/node_modules/
-frontend/node_modules/
+/frontend/node_modules/
+/backend/node_modules/
 
-# Build output
-/dist/
-/build/
-/out/
+# Build output (Frontend)
+frontend/build/
+/frontend/dist/
+/frontend/out/
+
+# Build output (Backend)
+backend/dist/
+/backend/build/
+/backend/out/
 
 # Logs
 *.log
@@ -33,7 +38,7 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 
-# Typescript files (if you use TypeScript)
+# TypeScript files (if you use TypeScript)
 *.tsbuildinfo
 
 # Test coverage reports
@@ -44,3 +49,6 @@ Thumbs.db
 
 # Production build folder (optional, if you deploy builds)
 /public/build/
+
+# Ignore frontend build folder (if deployed separately)
+frontend/public/build/
