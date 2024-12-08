@@ -6,12 +6,45 @@ const Navbar: React.FC = () => {
     const { isAuthenticated, user, logout } = useContext(AuthContext);
     const location = useLocation();
 
-    const navLinks = [
+    // Routes where the navbar should be hidden
+    const navbarDisabledFor = ['/login', '/register', '/take-quiz/:quizId'];
+
+    // Helper to determine if navbar should be hidden
+    const isNavbarDisabled = navbarDisabledFor.some((route) =>
+        new RegExp(`^${route.replace(':quizId', '[^/]+')}$`).test(location.pathname)
+    );
+
+    if (isNavbarDisabled) {
+        return;
+    }
+
+    const adminNavLinks = [
         { to: "/", label: "Home" },
         { to: "/quizzes", label: "Explore Quizzes" },
         { to: "/quizzes/create", label: "Create Quiz" },
         { to: "/attempts", label: "Attempts" }
     ];
+
+    const quizMakerNavLinks = [
+        { to: "/", label: "Home" },
+        { to: "/quizzes", label: "Explore Quizzes" },
+        { to: "/quizzes/create", label: "Create Quiz" },
+        { to: "/attempts", label: "Attempts" }
+    ];
+
+    const quizTakerNavLinks = [
+        { to: "/", label: "Home" },
+        { to: "/quizzes", label: "Explore Quizzes" },
+        { to: "/attempts", label: "Attempts" }
+    ];
+
+    const loggedOutNavLinks = [
+        { to: "/", label: "Home" },
+        { to: "/quizzes", label: "Explore Quizzes" },
+        { to: "/attempts", label: "Attempts" }
+    ];
+
+
 
     const renderNavLink = (to: string, label: string) => {
         const isActive = location.pathname === to;
@@ -42,7 +75,14 @@ const Navbar: React.FC = () => {
                 </div>
 
                 <div className='absolute -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2 flex items-center gap-3'>
-                    {navLinks.map(({ to, label }) => renderNavLink(to, label))}
+                    {user && user.role === "ADMIN"
+                        && adminNavLinks.map(({ to, label }) => renderNavLink(to, label))}
+                    {user && user.role === "QUIZ_TAKER"
+                        && quizTakerNavLinks.map(({ to, label }) => renderNavLink(to, label))}
+                    {(user && user.role === "QUIZ_MAKER") && quizMakerNavLinks.map(({ to, label }) => renderNavLink(to, label))}
+
+                    {!user && loggedOutNavLinks.map(({ to, label }) => renderNavLink(to, label))}
+
                 </div>
 
                 <div className="flex items-center justify-end space-x-4 w-[250px]">

@@ -1,4 +1,4 @@
-import { User, Quiz, Result } from './types';
+import { User, Quiz, Attempt } from './types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -73,7 +73,7 @@ export const api = {
   },
 
   // Quiz Attempt
-  async submitQuizResult(resultData: Partial<Result>) {
+  async submitQuizResult(resultData: Partial<Attempt>) {
     return this.request('/results/submit', 'POST', resultData);
   },
 

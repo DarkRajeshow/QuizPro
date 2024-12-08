@@ -1,66 +1,77 @@
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
+datasource db { 
+  provider = "postgresql" 
+  url      = env("DATABASE_URL") 
+} 
 
-generator client {
-  provider = "prisma-client-js"
-}
+generator client { 
+  provider = "prisma-client-js" 
+} 
 
-enum UserRole {
-  ADMIN
-  USER
-}
 
-enum QuestionType {
-  MULTIPLE_CHOICE
-  TRUE_FALSE
-}
+// updated roles
+enum UserRole { 
+  ADMIN 
+  QUIZ_TAKER 
+  QUIZ_MAKER 
+} 
 
-model User {
-  id        String    @id @default(uuid())
-  name      String
-  email     String    @unique
-  password  String
-  role      UserRole  @default(USER)
-  quizzes   Quiz[]
-  results   Result[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
 
-model Quiz {
-  id          String     @id @default(uuid())
-  title       String
-  description String?
-  createdBy   User       @relation(fields: [creatorId], references: [id])
-  creatorId   String
-  questions   Question[]
-  results     Result[]
-  duration    Int
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-}
+// added two more types
+enum QuestionType { 
+  MULTIPLE_CHOICE 
+  TRUE_FALSE 
+  FILL_IN_BLANK 
+  MULTI_ANSWER 
+} 
 
-model Question {
-  id             String        @id @default(uuid())
-  quiz           Quiz          @relation(fields: [quizId], references: [id])
-  quizId         String
-  type           QuestionType
-  text           String
-  options        Json
-  correctAnswer  String
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-}
 
-model Result {
-  id          String   @id @default(uuid())
-  user        User     @relation(fields: [userId], references: [id])
-  userId      String
-  quiz        Quiz     @relation(fields: [quizId], references: [id])
-  quizId      String
+model User { 
+  id        String    @id @default(uuid()) 
+  name      String 
+  email     String    @unique 
+  password  String 
+  role      UserRole  @default(QUIZ_TAKER) 
+  quizzes   Quiz[]    @relation("UserQuizzes") // Quizzes created by this user (if maker)
+  attempts  Attempt[] // Track user's attempts on quizzes
+  createdAt DateTime  @default(now()) 
+  updatedAt DateTime  @updatedAt 
+} 
+
+model Quiz { 
+  id            String       @id @default(uuid()) 
+  title         String 
+  description   String? 
+  createdBy     User         @relation("UserQuizzes", fields: [creatorId], references: [id]) 
+  creatorId     String 
+  questions     Question[] 
+  attempts      Attempt[] 
+  duration      Int          // Time limit in minutes 
+  startDate     DateTime?    // Quiz start date (optional) 
+  expiryDate    DateTime?    // Quiz expiry date (optional) 
+  maxAttempts   Int          // Maximum number of attempts allowed per user
+  createdAt     DateTime     @default(now()) 
+  updatedAt     DateTime     @updatedAt 
+} 
+
+model Question { 
+  id             String       @id @default(uuid()) 
+  quiz           Quiz         @relation(fields: [quizId], references: [id]) 
+  quizId         String 
+  type           QuestionType 
+  text           String 
+  options        Json?         // JSON to store options (for MULTIPLE_CHOICE or MULTI_ANSWER) 
+  correctAnswer  String[]         // JSON to support multiple correct answers 
+  createdAt      DateTime     @default(now()) 
+  updatedAt      DateTime     @updatedAt 
+} 
+
+model Attempt { 
+  id          String     @id @default(uuid()) 
+  user        User       @relation(fields: [userId], references: [id]) 
+  userId      String 
+  quiz        Quiz       @relation(fields: [quizId], references: [id]) 
+  quizId      String 
   score       Float
   totalQuestions Int
   completedAt DateTime @default(now())
-}
+} 

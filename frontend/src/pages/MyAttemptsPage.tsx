@@ -1,13 +1,22 @@
 import React, { useEffect, useState } from 'react';
+import {
+    CheckCircle2,
+    XCircle,
+    Clock,
+    BarChart2,
+    Search,
+    Star
+} from 'lucide-react';
 import { api } from '../utils/api';
 import Loader from '../components/ui/Loader';
 import { useNavigate } from 'react-router-dom';
 
 interface Attempt {
+    id: string,
     quizId: string;
     quizTitle: string;
     totalQuestions: number;
-    duration: number; // in minutes
+    duration: number;
     score: number;
     pass: boolean;
     completedAt: string;
@@ -16,13 +25,17 @@ interface Attempt {
 const MyAttemptsPage: React.FC = () => {
     const [attempts, setAttempts] = useState<Attempt[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
+    const [filteredAttempts, setFilteredAttempts] = useState<Attempt[]>([]);
+    const [searchTerm, setSearchTerm] = useState<string>('');
 
-    const navigate = useNavigate()
+    const navigate = useNavigate();
+
     useEffect(() => {
         const fetchAttempts = async () => {
             try {
                 const data = await api.getUserAttempts();
                 setAttempts(data);
+                setFilteredAttempts(data);
                 setLoading(false);
             } catch (error) {
                 console.error('Failed to fetch attempts:', error);
@@ -33,74 +46,141 @@ const MyAttemptsPage: React.FC = () => {
         fetchAttempts();
     }, []);
 
+    // Search and filter functionality
+    useEffect(() => {
+        console.log(searchTerm);
+        
+        const filtered = attempts.filter(attempt =>
+            attempt.quizTitle.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        setFilteredAttempts(filtered);
+    }, [searchTerm, attempts]);
+
     const navigateToQuiz = (id: string) => {
-        navigate(`/quizzes/${id}`);
+        navigate(`/take-quiz/${id}`);
     }
+    const navigateToResult = (attemptId: string) => {
+        navigate(`/results/${attemptId}`);
+    }
+
+    // Calculate summary statistics
+    const calculateSummary = () => {
+        const totalAttempts = attempts.length;
+        const averageScore = attempts.reduce((sum, attempt) => sum + attempt.score, 0) / totalAttempts || 0;
+        const passRate = (attempts.filter(attempt => attempt.pass).length / totalAttempts * 100) || 0;
+
+        return { totalAttempts, averageScore, passRate };
+    };
+3
+    const { totalAttempts, averageScore, passRate } = calculateSummary();
 
     if (loading) return <Loader />;
 
     return (
-        <div className="px-20 py-8">
-            <h1 className="text-3xl font-semibold text-gray-800 mb-6">My Attempts</h1>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {attempts.map((attempt) => (
-                    <div
-                        key={attempt.quizId}
-                        className={`p-6 transform transition-all hover:scale-[1.01] cursor-pointer border-2 bg-zinc-50 border-zinc-300`}
-                    >
-                        {/* Quiz Title */}
-                        <div>
-                            <h2 className="text-2xl font-semibold text-gray-800 mb-2 flex items-center justify-between">
-                                <p className='capitalize'>{attempt.quizTitle}</p>
-
-                                <p className="ml-2">
-                                    {attempt.pass ? (
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6 text-green-800">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" />
-                                        </svg>
-
-                                    ) : (
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5 text-red-600">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-                                        </svg>
-                                    )}
-                                </p>
-                            </h2>
-                        </div>
-
-                        {/* Quiz Information */}
-                        <div className="text-gray-700 grid grid-cols-2 gap-2 pt-6">
-                            <p className='p-2 bg-zinc-100 text-center'>
-                                <strong>Que. </strong> {attempt.totalQuestions}
+        <div className="bg-zinc-100 min-h-screen p-8">
+            <div className="mx-auto w-[94%]">
+                {/* Header and Statistics Section */}
+                <div className="mb-8 bg-white shadow-sm p-6 rounded-lg">
+                    <div className="flex justify-between items-center">
+                        <h1 className="text-4xl font-bold text-gray-800 flex items-center">
+                            <BarChart2 className="mr-4 text-purple-600" size={40} />
+                            My Quiz Attempts
+                        </h1>
+                        <div className="text-right">
+                            <p className="text-xl text-gray-600">
+                                <strong className="text-purple-700">{totalAttempts}</strong> Total Attempts
                             </p>
-                            <p className='p-2 bg-zinc-100 text-center'>
-                                <strong>Time:</strong> {attempt.duration} Min.
+                            <p className="text-lg text-gray-500">
+                                Avg. Score: <strong className="text-green-600">{averageScore.toFixed(1)}%</strong>
                             </p>
-                            <p className='p-2 bg-zinc-100 text-center'>
-                                <strong>Score:</strong> {attempt.score}%
-                            </p>
-                            <p className='p-2 bg-zinc-100 text-center'>
-                                <strong>Status:</strong>{' '}
-                                <span className={attempt.pass ? 'text-green-700' : 'text-red-700'}>
-                                    {attempt.pass ? 'Passed' : 'Failed'}
-                                </span>
-                            </p>
-                            <p className='p-2 col-span-2 bg-zinc-100 text-center'>
-                                <strong>Completed At:</strong>{' '}
-                                {new Date(attempt.completedAt).toLocaleDateString()}
+                            <p className="text-lg text-gray-500">
+                                Pass Rate: <strong className="text-blue-600">{passRate.toFixed(1)}%</strong>
                             </p>
                         </div>
-
-                        {/* Retry Button */}
-                        <button
-                            className="mt-4 bg-blue-200 text-black w-full"
-                            onClick={navigateToQuiz.bind(this, attempt.quizId)}
-                        >
-                            Try Again
-                        </button>
                     </div>
-                ))}
+
+                    {/* Search and Filter */}
+                    <div className="mt-6 relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Search className="text-gray-400" size={20} />
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="Search attempts by quiz title..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 border-2 border-gray-200 transition-all"
+                        />
+                    </div>
+                </div>
+
+                {/* Attempts Grid */}
+                {filteredAttempts.length === 0 ? (
+                    <div className="text-center bg-white flex items-center justify-center h-[60vh] p-12">
+                        <p className="text-2xl text-gray-500">No attempts found</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {filteredAttempts.map((attempt) => (
+                            <div
+                                key={attempt.id}
+                                className="bg-white shadow-lg overflow-hidden transform transition-all hover:scale-[1.01] cursor-pointer py-5 rounded-lg"
+                            >
+                                {/* Quiz Header */}
+                                <div className={`px-10 py-4 ${attempt.score >= 50 ? 'bg-green-50/60' : 'bg-red-50/60'}`}>
+                                    <div className="flex justify-between items-center">
+                                        <h2 className="text-xl font-bold capitalize text-gray-800">
+                                            {attempt.quizTitle}
+                                        </h2>
+                                        {attempt.score >= 50 ? (
+                                            <CheckCircle2 className="text-green-600" size={24} />
+                                        ) : (
+                                            <XCircle className="text-red-600" size={24} />
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Quiz Details */}
+                                <div className="py-6 px-10">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="flex items-center space-x-2">
+                                            <Clock className="text-blue-500" size={20} />
+                                            <span>{attempt.duration} Min</span>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                            <Star className="text-yellow-500" size={20} />
+                                            <span>{attempt.totalQuestions} Questions</span>
+                                        </div>
+                                        <div className={`text-center p-2 rounded ${attempt.score >= 50 ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
+                                            Score: {attempt.score}%
+                                        </div>
+                                        <div className={`text-center p-2 rounded ${attempt.score >= 50 ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
+                                            {attempt.score >= 50 ? 'Passed' : 'Failed'}
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-4 text-center text-gray-500">
+                                        Completed on: {new Date(attempt.completedAt).toLocaleDateString()}
+                                    </div>
+
+                                    {/* Retry Button */}
+                                    <button
+                                        onClick={() => navigateToQuiz(attempt.quizId)}
+                                        className="mt-6 w-full bg-purple-600 text-white py-2 hover:bg-purple-700 transition-colors"
+                                    >
+                                        Try Again
+                                    </button>
+                                    <button
+                                        onClick={() => navigateToResult(attempt.id)}
+                                        className="mt-2 w-full bg-zinc-200 text-black py-2 hover:bg-zinc-200/60 transition-colors"
+                                    >
+                                        View Full Result
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -3,50 +3,106 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export const submitQuizResult = async (req: Request, res: Response) => {
+export const submitQuizAttempt = async (req: Request, res: Response) => {
     try {
         const { quizId, score, totalQuestions } = req.body;
         const userId = (req as any).user.userId;
 
-        console.log(userId);
+        // Check quiz availability and attempt limits
+        const quiz = await prisma.quiz.findUnique({
+            where: { id: quizId },
+            select: {
+                startDate: true,
+                expiryDate: true,
+                maxAttempts: true
+            }
+        });
 
+        if (!quiz) {
+            return res.status(404).json({ message: 'Quiz not found' });
+        }
 
-        const result = await prisma.result.create({
+        const currentDate = new Date();
+        if (quiz.startDate && currentDate < quiz.startDate) {
+            return res.status(400).json({ message: 'Quiz is not yet available' });
+        }
+
+        if (quiz.expiryDate && currentDate > quiz.expiryDate) {
+            return res.status(400).json({ message: 'Quiz has expired' });
+        }
+
+        // Check number of existing attempts
+        const existingAttemptsCount = await prisma.attempt.count({
+            where: {
+                userId,
+                quizId,
+            }
+        });
+
+        if (quiz.maxAttempts && existingAttemptsCount >= quiz.maxAttempts) {
+            return res.status(400).json({
+                message: `Maximum attempts (${quiz.maxAttempts}) reached for this quiz`
+            });
+        }
+
+        const attempt = await prisma.attempt.create({
             data: {
                 userId,
                 quizId,
                 score,
-                totalQuestions
+                totalQuestions,
+                completedAt: currentDate
             }
         });
 
-        res.status(201).json(result);
+        res.status(201).json(attempt);
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Error submitting quiz result' });
+        res.status(500).json({ message: 'Error submitting quiz attempt' });
     }
 };
 
 export const getUserAttempts = async (req: Request, res: Response) => {
     const { userId } = (req as any).user;
+    const { quizId } = req.query;
 
     try {
-        const attempts = await prisma.result.findMany({
-            where: { userId },
+        const whereClause = quizId
+            ? { userId, quizId: String(quizId) }
+            : { userId };
+
+        const attempts = await prisma.attempt.findMany({
+            where: whereClause,
             include: {
-                quiz: true,
+                quiz: {
+                    select: {
+                        title: true,
+                        maxAttempts: true,
+                        startDate: true,
+                        expiryDate: true,
+                        duration: true
+                    }
+                },
             },
-            orderBy: { completedAt: 'desc' }, // Latest first
+            orderBy: { completedAt: 'desc' },
         });
 
-        const formattedAttempts = attempts.map((attempt) => ({
-            quizId: attempt.quiz.id,
+        const formattedAttempts = attempts.map((attempt: any) => ({
+            id: attempt.id,
+            quizId: attempt.quizId,
             quizTitle: attempt.quiz.title,
-            totalQuestions: attempt.totalQuestions,
             duration: attempt.quiz.duration,
+            totalQuestions: attempt.totalQuestions,
             score: attempt.score,
             pass: attempt.score >= (0.5 * attempt.totalQuestions), // Pass threshold: 50%
             completedAt: attempt.completedAt,
+            remainingAttempts: attempt.quiz.maxAttempts
+                ? attempt.quiz.maxAttempts - (attempts.filter(a => a.quizId === attempt.quizId).length)
+                : null,
+            quizAvailability: {
+                startDate: attempt.quiz.startDate,
+                expiryDate: attempt.quiz.expiryDate
+            }
         }));
 
         res.json(formattedAttempts);
@@ -56,8 +112,7 @@ export const getUserAttempts = async (req: Request, res: Response) => {
     }
 };
 
-// Get quiz results
-export const getQuizResults = async (req: Request, res: Response) => {
+export const getQuizAttempts = async (req: Request, res: Response) => {
     const { quizId } = req.params;
     const { userId, role } = (req as any).user;
 
@@ -69,9 +124,15 @@ export const getQuizResults = async (req: Request, res: Response) => {
         const quiz = await prisma.quiz.findUnique({
             where: { id: quizId },
             include: {
-                results: {
+                attempts: {
                     include: {
-                        user: true,
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true
+                            }
+                        }
                     },
                 },
                 createdBy: true,
@@ -87,51 +148,55 @@ export const getQuizResults = async (req: Request, res: Response) => {
             return res.status(403).json({ message: 'Access denied' });
         }
 
-        const results = quiz.results.map((result) => ({
-            userId: result.user.id,
-            userName: result.user.name,
-            score: result.score,
-            totalQuestions: result.totalQuestions,
-            completedAt: result.completedAt,
+        const attempts = quiz.attempts.map((attempt) => ({
+            userId: attempt.user.id,
+            userName: attempt.user.name,
+            userEmail: attempt.user.email,
+            score: attempt.score,
+            totalQuestions: attempt.totalQuestions,
+            completedAt: attempt.completedAt,
         }));
 
         const averageScore =
-            results.reduce((sum, result) => sum + result.score, 0) / results.length || 0;
+            attempts.reduce((sum, attempt) => sum + attempt.score, 0) / attempts.length || 0;
 
         const topParticipant =
-            results.length > 0
-                ? results.reduce((prev, curr) => (curr.score > prev.score ? curr : prev))
+            attempts.length > 0
+                ? attempts.reduce((prev, curr) => (curr.score > prev.score ? curr : prev))
                 : null;
 
         res.json({
             quiz: {
                 id: quiz.id,
                 title: quiz.title,
-                duration: quiz.duration,
                 description: quiz.description,
+                startDate: quiz.startDate,
+                expiryDate: quiz.expiryDate,
+                maxAttempts: quiz.maxAttempts,
                 createdAt: quiz.createdAt,
                 updatedAt: quiz.updatedAt,
             },
-            results,
+            attempts,
             averageScore,
             topParticipant,
         });
     } catch (error) {
-        console.error('Error fetching quiz results:', error);
+        console.error('Error fetching quiz attempts:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };
 
-export const getResultById = async (req: Request, res: Response) => {
+export const getAttemptById = async (req: Request, res: Response) => {
     try {
-        const { resultId } = req.params;
+        const { attemptId } = req.params;
+        const { userId, role } = (req as any).user;
 
-        if (!resultId) {
-            return res.status(400).json({ message: 'Result ID is required' });
+        if (!attemptId) {
+            return res.status(400).json({ message: 'Attempt ID is required' });
         }
 
-        const result = await prisma.result.findUnique({
-            where: { id: resultId },
+        const attempt = await prisma.attempt.findUnique({
+            where: { id: attemptId },
             include: {
                 user: {
                     select: {
@@ -142,20 +207,29 @@ export const getResultById = async (req: Request, res: Response) => {
                 },
                 quiz: {
                     select: {
+                        id: true,
                         title: true,
                         description: true,
+                        createdBy: true,
                     },
                 },
             },
         });
 
-        if (!result) {
-            return res.status(404).json({ message: 'Result not found' });
+        if (!attempt) {
+            return res.status(404).json({ message: 'Attempt not found' });
         }
 
-        res.status(200).json(result);
+        // Access control: Only admin, quiz creator, or the user who made the attempt can view
+        if (role !== 'ADMIN' &&
+            attempt.user.id !== userId &&
+            attempt.quiz.createdBy.id !== userId) {
+            return res.status(403).json({ message: 'Access denied' });
+        }
+
+        res.status(200).json(attempt);
     } catch (error) {
-        console.error('Error fetching result:', error);
-        res.status(500).json({ message: 'Failed to fetch result' });
+        console.error('Error fetching attempt:', error);
+        res.status(500).json({ message: 'Failed to fetch attempt' });
     }
 };

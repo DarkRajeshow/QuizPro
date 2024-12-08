@@ -19,13 +19,13 @@ export const getAdminDashboardData = async (req: Request, res: Response) => {
         const totalQuestions = await prisma.question.count();
 
         // Average Quiz Score
-        const averageQuizScoreResult = await prisma.result.aggregate({
+        const avarageQuizScoreAttempt = await prisma.attempt.aggregate({
             _avg: { score: true },
         });
-        const averageQuizScore = averageQuizScoreResult._avg.score || 0;
+        const averageQuizScore = avarageQuizScoreAttempt._avg.score || 0;
 
         // Top Quizzes by Average Score
-        const topQuizzesData = await prisma.result.groupBy({
+        const topQuizzesData = await prisma.attempt.groupBy({
             by: ['quizId'],
             _avg: { score: true },
             _count: { quizId: true },
@@ -67,7 +67,7 @@ export const getAdminDashboardData = async (req: Request, res: Response) => {
             SELECT 
                 date_trunc('week', "completedAt") AS week,
                 COUNT(*) AS quizCompletions
-            FROM "Result"
+            FROM "Attempt"
             GROUP BY week
             ORDER BY week
         `;
@@ -96,7 +96,7 @@ export const getAdminDashboardData = async (req: Request, res: Response) => {
         }));
 
         // Recent Activities
-        const recentActivitiesData = await prisma.result.findMany({
+        const recentActivitiesData = await prisma.attempt.findMany({
             take: 10,
             orderBy: { completedAt: 'desc' },
             include: {

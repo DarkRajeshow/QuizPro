@@ -1,13 +1,13 @@
 import React, { useState, useContext, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Lock, Mail, Eye, EyeOff } from 'lucide-react';
 import { api } from '../utils/api';
 import { AuthContext } from '../App';
 
 const LoginPage: React.FC = () => {
-    const [isRegister, setIsRegister] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [name, setName] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
 
     const { login } = useContext(AuthContext);
@@ -18,22 +18,27 @@ const LoginPage: React.FC = () => {
         setError('');
 
         try {
-            const userData = isRegister
-                ? await api.register({ name, email, password })
-                : await api.login({ email, password });
+            const userData = await api.login({
+                email,
+                password,
+            });
 
             login(userData);
             navigate('/');
         } catch (err: any) {
-            setError(err.message || 'Authentication failed');
+            setError(err.message || 'Login failed');
         }
+    };
+
+    const handleForgotPassword = () => {
+        navigate('/forgot-password');
     };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 flex items-center justify-center p-4">
             <div className="w-full max-w-md bg-white shadow-lg rounded-xl p-8">
-                <h2 className="text-2xl font-bold text-center mb-6">
-                    {isRegister ? 'Create Account' : 'Login'}
+                <h2 className="text-3xl font-bold text-center mb-6 text-gray-800">
+                    Login
                 </h2>
 
                 {error && (
@@ -43,51 +48,62 @@ const LoginPage: React.FC = () => {
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    {isRegister && (
+                    <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                         <input
-                            type="text"
-                            placeholder="Full Name"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
+                            type="email"
+                            placeholder="Email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                             required
-                            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full pl-10 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
-                    )}
+                    </div>
 
-                    <input
-                        type="email"
-                        placeholder="Email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+                    <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                        <input
+                            type={showPassword ? "text" : "password"}
+                            placeholder="Password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                            className="w-full pl-10 pr-10 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                        >
+                            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                        </button>
+                    </div>
 
-                    <input
-                        type="password"
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+                    <div className="flex justify-between items-center">
+                        <button
+                            type="button"
+                            onClick={handleForgotPassword}
+                            className="text-blue-500 hover:underline text-sm"
+                        >
+                            Forgot Password?
+                        </button>
+                    </div>
 
                     <button
                         type="submit"
                         className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
                     >
-                        {isRegister ? 'Register' : 'Login'}
+                        Login
                     </button>
                 </form>
 
                 <div className="text-center mt-4">
+                    <span>Don't have an account? </span>
                     <button
-                        onClick={() => setIsRegister(!isRegister)}
+                        onClick={() => navigate('/register')}
                         className="text-blue-500 hover:underline"
                     >
-                        {isRegister
-                            ? 'Already have an account? Login'
-                            : 'Need an account? Register'}
+                        Register
                     </button>
                 </div>
             </div>

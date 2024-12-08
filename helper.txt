@@ -1,3 +1,125 @@
+
+# next features to build
+1. Add Link to each quiz, to share it. ____done  
+2. Allow more type of questions to create ____done
+3. Add new user called quiz_taker ____done
+4. Create a setting section for each quiz - choose several of the following items to include: you can keep feature for limiting the number of times the quiz can be taken by a user, start and expiration dates for the quiz, and a time limit to complete the quiz.
+____done added max-limits for attempts and 
+
+
+
+
+
+
+
+
+## older schema:
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+}
+
+model User {
+  id        String    @id @default(uuid())
+  name      String
+  email     String    @unique
+  password  String
+  role      UserRole  @default(USER)
+  quizzes   Quiz[]
+  results   Result[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Quiz {
+  id          String     @id @default(uuid())
+  title       String
+  description String?
+  createdBy   User       @relation(fields: [creatorId], references: [id])
+  creatorId   String
+  questions   Question[]
+  results     Result[]
+  duration    Int
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Question {
+  id             String        @id @default(uuid())
+  quiz           Quiz          @relation(fields: [quizId], references: [id])
+  quizId         String
+  type           QuestionType
+  text           String
+  options        Json
+  correctAnswer  String
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model Result {
+  id          String   @id @default(uuid())
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  quiz        Quiz     @relation(fields: [quizId], references: [id])
+  quizId      String
+  score       Float
+  totalQuestions Int
+  completedAt DateTime @default(now())
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # In backend directory
 npx prisma generate
 npx prisma migrate dev --name init

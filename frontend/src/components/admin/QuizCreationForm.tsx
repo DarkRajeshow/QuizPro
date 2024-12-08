@@ -5,49 +5,92 @@ import SingleQuestion from './SingleQuestion';
 import QuestionCard from './QuestionCard';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { PlusCircle, Save, Clock } from 'lucide-react';
 
 const QuizCreationForm: React.FC = () => {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
-    const [duration, setDuration] = useState(10)
+    const [duration, setDuration] = useState(10);
+    const [maxAttempts, setMaxAttempts] = useState(1);
+    const [startDate, setStartDate] = useState<string>('');
+    const [expiryDate, setExpiryDate] = useState<string>('');
     const [questions, setQuestions] = useState<Partial<Question>[]>([{
         type: QuestionType.MULTIPLE_CHOICE,
         text: '',
         options: ['', '', '', ''],
-        correctAnswer: ''
+        correctAnswer: []
     }]);
     const [questionIndex, setQuestionIndex] = useState(0);
-    const navigate = useNavigate()
-
+    const navigate = useNavigate();
 
     const addQuestion = () => {
-        setQuestionIndex(questions.length)
+        const newQuestionIndex = questions.length;
+        setQuestionIndex(newQuestionIndex);
         setQuestions([...questions, {
             type: QuestionType.MULTIPLE_CHOICE,
             text: '',
             options: ['', '', '', ''],
-            correctAnswer: '',
+            correctAnswer: []
         }]);
     };
 
     const updateQuestion = (index: number, updates: Partial<Question>) => {
         const newQuestions = [...questions];
         newQuestions[index] = { ...newQuestions[index], ...updates };
-        setQuestions(newQuestions);
+        setQuestions(newQuestions); 
+    };
+
+    const removeQuestion = (index: number) => {
+        if (questions.length <= 1) {
+            toast.error("A quiz must have at least one question.");
+            return;
+        }
+
+        if (index === questionIndex) {
+            setQuestionIndex(0);
+        } else if (questionIndex > index) {
+            setQuestionIndex((prev) => prev - 1);
+        }
+
+        const tempQuestions = [...questions];
+        tempQuestions.splice(index, 1);
+        setQuestions(tempQuestions);
+    };
+
+    const validateQuestions = () => {
+        return questions.every((q) => {
+            // Validate common fields
+            if (!q.type || !q.text) return false;
+
+            // Validate based on question type
+            switch (q.type) {
+                case QuestionType.MULTIPLE_CHOICE:
+                    return q.options && q.options.length > 0 &&
+                        q.correctAnswer && q.correctAnswer.length > 0;
+                case QuestionType.TRUE_FALSE:
+                    return q.correctAnswer && q.correctAnswer.length === 1;
+                case QuestionType.FILL_IN_BLANK:
+                    return q.correctAnswer && q.correctAnswer.length === 1;
+                case QuestionType.MULTI_ANSWER:
+                    return q.correctAnswer && q.correctAnswer.length > 0;
+                default:
+                    return false;
+            }
+        });
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        console.log(questions);
+        // Validate quiz details
+        if (!title) {
+            toast.error("Quiz title is required.");
+            return;
+        }
 
-
-        const invalidQuestion = questions.find((q: any) => {
-            return !q.type || !q.text || !Array.isArray(q.options) || q.options.length === 0 || !q.correctAnswer;
-        });
-
-        if (invalidQuestion) {
-            toast.error("All questions must have type, text, options, and correctAnswer.")
+        // Validate questions
+        if (!validateQuestions()) {
+            toast.error("Please complete all questions with valid answers.");
             return;
         }
 
@@ -56,92 +99,134 @@ const QuizCreationForm: React.FC = () => {
                 title,
                 description,
                 questions: questions as Question[],
-                duration
+                duration,
+                maxAttempts,
+                startDate: startDate ? new Date(startDate) : undefined,
+                expiryDate: expiryDate ? new Date(expiryDate) : undefined
             });
 
-            toast.success("Quiz created successfully.")
-            navigate("/")
+            toast.success("Quiz created successfully.");
+            navigate("/");
 
         } catch (error) {
-            alert('Failed to create quiz');
+            toast.error('Failed to create quiz');
+            console.error(error);
         }
     };
 
-
-    const removeQuestion = (index: number) => {
-
-        if (index === questionIndex) {
-            setQuestionIndex(0)
-        }
-        else if (questionIndex > index) {
-            setQuestionIndex((pre) => pre - 1)
-        }
-        let tempquestions = [...questions]
-        tempquestions.splice(index, 1);
-
-        setQuestions(tempquestions);
-    }
-
     return (
-        <div className="bg-white rounded">
+        <div className="bg-white shadow-lg text-sm">
             <div className='grid grid-cols-5'>
-                <div className='bg-[#F6F6F6]/50 p-3 border-zinc-200 border overflow-y-auto h-[91vh]'>
-                    <h1 className='pb-3 text-lg'>Questions ({questions.length})</h1>
-                    <div className='flex gap-2 flex-col'>
+                <div className='bg-gray-50 p-4 border-r overflow-y-auto h-full'>
+                    <h2 className='text-lg font-semibold mb-4 flex items-center gap-2'>
+                        Questions ({questions.length})
+                    </h2>
+                    <div className='space-y-2'>
                         {questions.map((question, index) => (
-                            <QuestionCard key={index} removeQuestion={removeQuestion} setQuestionIndex={setQuestionIndex} question={question as Question} questionIndex={questionIndex} index={index} />
-                        ))
-                        }
+                            <QuestionCard
+                                key={index}
+                                removeQuestion={removeQuestion}
+                                setQuestionIndex={setQuestionIndex}
+                                question={question as Question}
+                                questionIndex={questionIndex}
+                                index={index}
+                            />
+                        ))}
                     </div>
                 </div>
-                <form onSubmit={handleSubmit} className='col-span-4 text-sm h-[91vh] p-4 border-zinc-200 border-l-none border'>
-                    <div className='flex flex-col gap-2 h-[90%]'>
-                        <div className="mb-2">
-                            <label className="block mb-2">Quiz Title</label>
-                            <input
-                                type="text"
-                                value={title}
-                                onChange={(e) => setTitle(e.target.value)}
-                                className="w-full p-2 border"
-                                required
-                            />
+                <form onSubmit={handleSubmit} className='col-span-4 p-6 space-y-4'>
+                    <div className='grid grid-cols-7 gap-6'>
+                        <div className='col-span-4 flex flex-col gap-4'>
+                            <div>
+                                <label className="block mb-2 font-medium">Quiz Title</label>
+                                <input
+                                    type="text"
+                                    value={title}
+                                    onChange={(e) => setTitle(e.target.value)}
+                                    className="w-full p-2 border-2"
+                                    required
+                                    placeholder="Enter quiz title"
+                                />
+                            </div>
+                            <div>
+                                <label className="block mb-2 font-medium">Description (Optional)</label>
+                                <textarea
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value)}
+                                    className="w-full h-[210px] p-2 border-2"
+                                    placeholder="Enter quiz description"
+                                />
+                            </div>
                         </div>
-                        <div className="mb-2">
-                            <label className="block mb-2">Description</label>
-                            <textarea
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                                className="w-full p-2 border"
-                            />
+
+                        <div className='col-span-3 flex flex-col gap-4'>
+                            <div>
+                                <label className="mb-2 font-medium flex items-center gap-2">
+                                    <Clock size={16} /> Duration (minutes)
+                                </label>
+                                <input
+                                    type="number"
+                                    value={duration}
+                                    onChange={(e) => setDuration(parseInt(e.target.value))}
+                                    className="w-full p-2 border-2"
+                                    min={1}
+                                />
+                            </div>
+                            <div>
+                                <label className="block mb-2 font-medium">Max Attempts</label>
+                                <input
+                                    type="number"
+                                    value={maxAttempts}
+                                    onChange={(e) => setMaxAttempts(parseInt(e.target.value))}
+                                    className="w-full p-2 border-2"
+                                    min={1}
+                                />
+                            </div>
+                            <div>
+                                <label className="block mb-2 font-medium">Start Date (Optional)</label>
+                                <input
+                                    type="datetime-local"
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                    className="w-full p-2 border-2"
+                                />
+                            </div>
+                            <div>
+                                <label className="block mb-2 font-medium">Expiry Date (Optional)</label>
+                                <input
+                                    type="datetime-local"
+                                    value={expiryDate}
+                                    onChange={(e) => setExpiryDate(e.target.value)}
+                                    className="w-full p-2 border-2"
+                                />
+                            </div>
                         </div>
-                        {(questions && questions.length !== 0) && <SingleQuestion question={questions[questionIndex] as Question} updateQuestion={updateQuestion} index={questionIndex} />}
                     </div>
 
+                    {(questions && questions.length !== 0) && (
+                        <SingleQuestion
+                            question={questions[questionIndex] as Question}
+                            updateQuestion={updateQuestion}
+                            index={questionIndex}
+                        />
+                    )}
 
-                    <div className='h-[10%] flex items-center justify-between gap-3 w-full'>
-                        <div className='flex items-center gap-2 pr-2'>
-                            <input value={duration} onChange={(e) => setDuration(parseInt(e.target.value))} type="text" className='w-16 bg-zinc-100 focus:outline-none border-2 border-zinc-200' />
-                            <p className=''>Min.</p>
-                        </div>
-
-                        <div className='flex items-center justify-center gap-3'>
-                            <button
-                                type="button"
-                                onClick={addQuestion}
-                                className="bg-blue-500 flex items-center justify-center gap-1"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                                </svg>
-                                Add Question
-                            </button>
-                            <button
-                                type="submit"
-                                className="bg-green-600"
-                            >
-                                Create Quiz
-                            </button>
-                        </div>
+                    <div className='flex justify-between'>
+                        <button
+                            type="button"
+                            onClick={addQuestion}
+                            className="flex items-center text-blue-600 hover:text-blue-800"
+                        >
+                            <PlusCircle size={20} className="mr-2" />
+                            Add Question
+                        </button>
+                        <button
+                            type="submit"
+                            className="flex items-center bg-blue-600 text-white px-4 py-2 hover:bg-blue-700"
+                        >
+                            <Save size={20} className="mr-2" />
+                            Save Quiz
+                        </button>
                     </div>
                 </form>
             </div>

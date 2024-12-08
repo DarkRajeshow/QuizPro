@@ -3,7 +3,7 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
-  Navigate
+  Navigate,
 } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import HomePage from './pages/HomePage';
@@ -17,7 +17,7 @@ import ResultPage from './pages/ResultPage';
 import QuizzesPage from './pages/QuizzesPage';
 import QuizResultsPage from './pages/QuizResultsPage';
 import MyAttemptsPage from './pages/MyAttemptsPage';
-
+import RegisterPage from './pages/RegisterPage';
 
 // Authentication Context
 export const AuthContext = React.createContext<{
@@ -29,7 +29,7 @@ export const AuthContext = React.createContext<{
   isAuthenticated: false,
   user: null,
   login: () => { },
-  logout: () => { }
+  logout: () => { },
 });
 
 const App: React.FC = () => {
@@ -54,96 +54,112 @@ const App: React.FC = () => {
     setUser(null);
   };
 
+  // Role-based route protection
+  const ProtectedRoute = ({
+    children,
+    allowedRoles,
+  }: {
+    children: JSX.Element;
+    allowedRoles: string[];
+  }) => {
+    if (!isAuthenticated) {
+      return <Navigate to="/login" />;
+    }
+    if (!allowedRoles.includes(user?.role)) {
+      return <Navigate to="/" />; // Redirect to home or any other page
+    }
+    return children;
+  };
+
   return (
-    <AuthContext.Provider value={{
-      isAuthenticated,
-      user,
-      login,
-      logout
-    }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
       <Router>
         <Toaster duration={1500} richColors />
         <div className="w-screen">
+          {/* Conditionally Render Navbar */}
           <Navbar />
           <Routes>
-            <Route
-              path="/"
-              element={<HomePage />}
-            />
+            <Route path="/" element={<HomePage />} />
             <Route
               path="/login"
               element={!isAuthenticated ? <LoginPage /> : <Navigate to="/" />}
+            />
+            <Route
+              path="/register"
+              element={!isAuthenticated ? <RegisterPage /> : <Navigate to="/" />}
             />
 
             {/* Admin Routes */}
             <Route
               path="/admin"
               element={
-                isAuthenticated && user?.role === 'ADMIN' ?
-                  <AdminPage /> :
-                  <Navigate to="/login" />
+                <ProtectedRoute allowedRoles={['ADMIN']}>
+                  <AdminPage />
+                </ProtectedRoute>
               }
             />
-
 
             {/* User Routes */}
             <Route
               path="/user"
               element={
-                isAuthenticated ?
-                  <UserPage /> :
-                  <Navigate to="/login" />
+                <ProtectedRoute
+                  allowedRoles={['ADMIN', 'QUIZ_TAKER', 'QUIZ_MAKER']}
+                >
+                  <UserPage />
+                </ProtectedRoute>
               }
             />
             <Route
-              path="/quizzes/:quizId"
+              path="/take-quiz/:quizId"
               element={
-                isAuthenticated ?
-                  <QuizAttempt /> :
-                  <Navigate to="/login" />
+                <ProtectedRoute allowedRoles={['ADMIN', 'QUIZ_TAKER', 'QUIZ_MAKER']}>
+                  <QuizAttempt />
+                </ProtectedRoute>
               }
             />
             <Route
               path="/results/:resultId"
               element={
-                isAuthenticated ?
-                  <ResultPage /> :
-                  <Navigate to="/login" />
+                <ProtectedRoute allowedRoles={['ADMIN', 'QUIZ_TAKER', 'QUIZ_MAKER']}>
+                  <ResultPage />
+                </ProtectedRoute>
               }
             />
             <Route
               path="/quiz-results/:quizId"
               element={
-                isAuthenticated ?
-                  <QuizResultsPage /> :
-                  <Navigate to="/login" />
+                <ProtectedRoute allowedRoles={['ADMIN', 'QUIZ_MAKER']}>
+                  <QuizResultsPage />
+                </ProtectedRoute>
               }
             />
             <Route
               path="/attempts"
               element={
-                isAuthenticated ?
-                  <MyAttemptsPage /> :
-                  <Navigate to="/login" />
+                <ProtectedRoute allowedRoles={['ADMIN', 'QUIZ_TAKER', 'QUIZ_MAKER']}>
+                  <MyAttemptsPage />
+                </ProtectedRoute>
               }
             />
             <Route
               path="/quizzes"
               element={
-                isAuthenticated ?
-                  <QuizzesPage /> :
-                  <Navigate to="/login" />
+                <ProtectedRoute
+                  allowedRoles={['ADMIN', 'QUIZ_TAKER', 'QUIZ_MAKER']}
+                >
+                  <QuizzesPage />
+                </ProtectedRoute>
               }
             />
             <Route
               path="/quizzes/create"
               element={
-                isAuthenticated ?
-                  <QuizCreationForm /> :
-                  <Navigate to="/login" />
+                <ProtectedRoute allowedRoles={['ADMIN', 'QUIZ_MAKER']}>
+                  <QuizCreationForm />
+                </ProtectedRoute>
               }
             />
-            
           </Routes>
         </div>
       </Router>

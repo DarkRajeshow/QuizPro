@@ -1,17 +1,17 @@
 import express from 'express';
 import {
-  submitQuizResult,
-  getQuizResults,
-  getResultById,
-  getUserAttempts
+  getAttemptById,
+  getQuizAttempts,
+  getUserAttempts,
+  submitQuizAttempt
 } from '../controllers/resultController';
 import { authenticateToken } from '../middleware/authMiddleware';
 
 const router = express.Router();
 
 router.get('/', authenticateToken, getUserAttempts);
-router.get('/quiz/:quizId', authenticateToken, getQuizResults);
-router.get('/:resultId', authenticateToken, getResultById);
-router.post('/submit', authenticateToken, submitQuizResult);
+router.get('/quiz/:quizId', authenticateToken, getQuizAttempts);
+router.get('/:attemptId', authenticateToken, getAttemptById);
+router.post('/submit', authenticateToken, submitQuizAttempt);
 
 export default router;

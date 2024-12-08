@@ -70,14 +70,20 @@ const Home: React.FC = () => {
                                         Quizzes
                                         <Rocket className="w-8 h-8" />
                                     </Link>
-
-                                    <Link
-                                        to="/quizzes/create"
-                                        className="flex items-center gap-2 px-6 py-3 border-2 border-blue-600 text-blue-600 hover:bg-blue-50 transition-all transform hover:scale-105"
-                                    >
-                                        Create New Quiz
-                                        <ChevronRight className="w-8 h-8" />
-                                    </Link>
+                                    {user.role !== "QUIZ_TAKER" ?
+                                        <Link
+                                            to="/quizzes/create"
+                                            className="flex items-center gap-2 px-6 py-3 border-2 border-blue-600 text-blue-600 hover:bg-blue-50 transition-all transform hover:scale-105"
+                                        >
+                                            Create New Quiz
+                                            <ChevronRight className="w-8 h-8" />
+                                        </Link> : <Link
+                                            to="/attempts"
+                                            className="flex items-center gap-2 px-6 py-3 border-2 border-blue-600 text-blue-600 hover:bg-blue-50 transition-all transform hover:scale-105"
+                                        >
+                                            Check your attempts
+                                            <ChevronRight className="w-8 h-8" />
+                                        </Link>}
                                 </div>
                             )
                         }
@@ -86,7 +92,7 @@ const Home: React.FC = () => {
                     <div className="relative cursor-pointer h-[360px] overflow-hidden group shadow-2xl rounded-md">
                         <div className="bg-white/60 backdrop-blur-lg p-6 shadow-2xl absolute w-full h-full">
                             <img
-                                src="/public/admin.jpeg"
+                                src="/admin.jpeg"
                                 alt="QuizPro Dashboard"
                                 className="transform transition-transform duration-1000 group-hover:-translate-y-56"
                             />
@@ -102,7 +108,7 @@ const Home: React.FC = () => {
                 <section className="bg-white rounded-md shadow-lg p-8 py-28 flex items-center gap-12">
                     <div className="flex-1">
                         <img
-                            src='/public/create.jpeg'
+                            src='/create.jpeg'
                             alt="Quiz Creation"
                             className="shadow-md hover:shadow-xl transition-shadow rounded-md"
                         />
@@ -141,7 +147,7 @@ const Home: React.FC = () => {
                     </div>
                     <div className="flex-1">
                         <img
-                            src='/public/quizzes.jpeg'
+                            src='/quizzes.jpeg'
                             alt="Quiz Selection"
                             className="shadow-md hover:shadow-xl transition-shadow rounded-md"
                         />
@@ -152,12 +158,12 @@ const Home: React.FC = () => {
                 <section className="bg-white rounded-md shadow-lg p-8 py-28 flex items-center gap-12">
                     <div className="flex-1">
                         <img
-                            src='/public/results.jpeg'
+                            src='/results.jpeg'
                             alt="Performance Tracking"
                             className="shadow-md hover:shadow-xl transition-shadow rounded-md"
                         />
                     </div>
-                    
+
                     <div className="flex-1">
                         <h2 className="text-4xl font-bold mb-4 text-purple-700">Review Your Candidate's Progress and Aim Higher!</h2>
                         <p className="text-gray-600 mb-6">
@@ -187,7 +193,7 @@ const Home: React.FC = () => {
                         <h4 className="font-semibold mb-4">Quick Links</h4>
                         <nav className="space-y-2">
                             <Link to="/quizzes" className="block hover:text-blue-400 transition-colors">Explore Quizzes</Link>
-                            <Link to="/quizzes/create" className="block hover:text-blue-400 transition-colors">Create Quiz</Link>
+                            {user.role !== "QUIZ_TAKER" && <Link to="/quizzes/create" className="block hover:text-blue-400 transition-colors">Create Quiz</Link>}
                             <Link to="/attempts" className="block hover:text-blue-400 transition-colors">Attempts</Link>
                         </nav>
                     </div>
