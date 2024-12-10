@@ -412,8 +412,8 @@ const QuizAttempt: React.FC = () => {
                                 setQuestionModalOpen(false);
                             }}
                             className={`p-2 rounded ${state.currentQuestionIndex === index
-                                ? 'bg-blue-500 text-white'
-                                : 'bg-blue-200 text-black'
+                                ? 'bg-blue-700 text-white'
+                                : 'bg-blue-100 text-black'
                                 }`}
                         >
                             {index + 1}
@@ -465,7 +465,7 @@ const QuizAttempt: React.FC = () => {
                     </div>
                     <button
                         onClick={() => setQuestionModalOpen(true)}
-                        className="bg-blue-300 p-2 rounded hover:bg-gray-400"
+                        className="bg-blue-600 p-2 rounded"
                     >
                         Navigate Questions
                     </button>

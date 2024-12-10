@@ -75,7 +75,7 @@ const QuizzesPage: React.FC = () => {
         );
     }, [searchTerm, activeFilter, userQuizzes, popularQuizzes, user]);
 
-
+    const navigateOptions = user && user.role === "QUIZ_MAKER" ? ['popular', 'my'] : ['popular']
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8 md:p-16">
             {/* Search and Filter Section */}
@@ -98,7 +98,7 @@ const QuizzesPage: React.FC = () => {
 
                 {/* Filter Buttons */}
                 <div className="flex space-x-2">
-                    {['popular', 'my'].map((filter) => (
+                    {navigateOptions.map((filter) => (
                         <motion.button
                             key={filter}
                             whileHover={{ scale: 1.05 }}
@@ -138,7 +138,7 @@ const QuizzesPage: React.FC = () => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ staggerChildren: 0.1 }}
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"
                 >
                     {filteredQuizzes.map((quiz) => (
                         <QuizCard
@@ -154,7 +154,7 @@ const QuizzesPage: React.FC = () => {
                             userAttempts={quiz.userAttempts}
                             difficulty='medium'
                             category='General'
-                            isUserQuize={user.id === quiz.creatorId}
+                            isUserQuize={user.id === quiz.creatorId || user.role === "ADMIN"}
                         />
                     ))}
                 </motion.div>

@@ -70,7 +70,7 @@ const Home: React.FC = () => {
                                         Quizzes
                                         <Rocket className="w-8 h-8" />
                                     </Link>
-                                    {user.role !== "QUIZ_TAKER" ?
+                                    {user && user.role !== "QUIZ_TAKER" ?
                                         <Link
                                             to="/quizzes/create"
                                             className="flex items-center gap-2 px-6 py-3 border-2 border-blue-600 text-blue-600 hover:bg-blue-50 transition-all transform hover:scale-105"
@@ -193,7 +193,7 @@ const Home: React.FC = () => {
                         <h4 className="font-semibold mb-4">Quick Links</h4>
                         <nav className="space-y-2">
                             <Link to="/quizzes" className="block hover:text-blue-400 transition-colors">Explore Quizzes</Link>
-                            {user.role !== "QUIZ_TAKER" && <Link to="/quizzes/create" className="block hover:text-blue-400 transition-colors">Create Quiz</Link>}
+                            {user && user.role !== "QUIZ_TAKER" && <Link to="/quizzes/create" className="block hover:text-blue-400 transition-colors">Create Quiz</Link>}
                             <Link to="/attempts" className="block hover:text-blue-400 transition-colors">Attempts</Link>
                         </nav>
                     </div>

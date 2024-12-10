@@ -114,6 +114,140 @@ export const createQuiz = async (req: Request, res: Response) => {
     }
 };
 
+export const updateQuizById = async (req: Request, res: Response) => {
+    try {
+        const { quizId } = req.params;
+        const {
+            title,
+            description,
+            questions,
+            duration,
+            startDate,
+            expiryDate,
+            maxAttempts
+        } = req.body;
+
+        const creatorId = (req as any).user?.userId;
+        const userRole = (req as any).user?.role;
+
+        // Check if user has permission to update quiz
+        if (userRole !== UserRole.QUIZ_MAKER && userRole !== UserRole.ADMIN) {
+            return res.status(403).json({ message: 'Unauthorized to update quizzes' });
+        }
+
+        // Validate required fields
+        if (!quizId) {
+            return res.status(400).json({ message: 'Quiz ID is required' });
+        }
+
+        if (!title || !questions || !Array.isArray(questions) || questions.length === 0) {
+            return res.status(400).json({ message: 'Title and at least one question are required' });
+        }
+
+        // Validate duration
+        if (!duration || typeof duration !== 'number' || duration <= 0) {
+            return res.status(400).json({ message: 'Valid duration is required' });
+        }
+
+        // Validate max attempts
+        if (!maxAttempts || typeof maxAttempts !== 'number' || maxAttempts <= 0) {
+            return res.status(400).json({ message: 'Valid max attempts is required' });
+        }
+
+        // Validate date range if provided
+        if (startDate && expiryDate && new Date(startDate) >= new Date(expiryDate)) {
+            return res.status(400).json({ message: 'Start date must be before expiry date' });
+        }
+
+        // Check if quiz exists and is owned by the user
+        const existingQuiz = await prisma.quiz.findUnique({
+            where: {
+                id: quizId,
+                createdBy: {
+                    id: creatorId
+                }
+            }
+        });
+
+        if (!existingQuiz) {
+            return res.status(404).json({ message: 'Quiz not found or you do not have permission to update' });
+        }
+
+        // Validate question structure
+        const invalidQuestion = questions.find((q: any) => {
+            // Check if question type is valid
+            if (!Object.values(QuestionType).includes(q.type)) {
+                return true;
+            }
+
+            // Validate options based on question type
+            switch (q.type) {
+                case QuestionType.MULTIPLE_CHOICE:
+                case QuestionType.MULTI_ANSWER:
+                    // Require options for these types
+                    if (!q.options || !Array.isArray(q.options) || q.options.length === 0) {
+                        return true;
+                    }
+                    break;
+                case QuestionType.TRUE_FALSE:
+                case QuestionType.FILL_IN_BLANK:
+                    // These types might not require options
+                    break;
+            }
+
+            // Ensure text and correct answer exist
+            return !q.text ||
+                !q.correctAnswer ||
+                !Array.isArray(q.correctAnswer) ||
+                q.correctAnswer.length === 0;
+        });
+
+        if (invalidQuestion) {
+            return res.status(400).json({ message: 'Invalid question structure' });
+        }
+
+        // Update quiz with nested questions
+        const updatedQuiz = await prisma.$transaction(async (prisma) => {
+            // Delete existing questions
+            await prisma.question.deleteMany({
+                where: { quizId }
+            });
+
+            // Create updated quiz with new questions
+            return prisma.quiz.update({
+                where: { id: quizId },
+                data: {
+                    title,
+                    description,
+                    duration,
+                    startDate: startDate ? new Date(startDate) : null,
+                    expiryDate: expiryDate ? new Date(expiryDate) : null,
+                    maxAttempts,
+                    questions: {
+                        create: questions.map((q: any) => ({
+                            type: q.type,
+                            text: q.text,
+                            options: q.options ? q.options : undefined,
+                            correctAnswer: q.correctAnswer,
+                        })),
+                    },
+                },
+                include: {
+                    questions: true,
+                },
+            });
+        });
+
+        res.status(200).json({
+            message: 'Quiz updated successfully',
+            quiz: updatedQuiz,
+        });
+    } catch (error) {
+        console.error('Error updating quiz:', error);
+        res.status(500).json({ message: 'Error updating quiz' });
+    }
+};
+
 export const getQuizById = async (req: Request, res: Response) => {
     try {
         const { quizId } = req.params;
@@ -139,36 +273,19 @@ export const getQuizById = async (req: Request, res: Response) => {
         // Check quiz availability and user permissions
         const isAvailable = (!quiz.startDate || quiz.startDate <= now) &&
             (!quiz.expiryDate || quiz.expiryDate >= now);
-        const isCreator = quiz.creatorId === userId;
-        const isAdmin = userRole === UserRole.ADMIN;
 
-        // Check if user has exceeded max attempts
         const userAttempts = await prisma.attempt.count({
             where: {
                 quizId,
                 userId
             }
         });
+
         const canAttempt = userAttempts < quiz.maxAttempts;
-
-        // Process questions if needed
-        // const processedQuestions = quiz.questions.map(q => {
-        //     const processedQuestion = {
-        //         ...q,
-        //         options: q.options ? JSON.parse(q.options as string) : null
-        //     };
-
-        //     // Remove correct answers for non-creators/admins
-        //     if (!isCreator && !isAdmin) {
-        //         delete processedQuestion.correctAnswer;
-        //     }
-        //     return processedQuestion;
-        // });
 
         res.json({
             ...quiz,
-            // questions: processedQuestions,
-            userAttempts, // Include userAttempts in the response
+            userAttempts,
             isAvailable,
             canAttempt,
             remainingAttempts: Math.max(0, quiz.maxAttempts - userAttempts)

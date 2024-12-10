@@ -37,7 +37,7 @@ model User {
   updatedAt DateTime  @updatedAt 
 } 
 
-model Quiz { 
+model Quiz {
   id            String       @id @default(uuid()) 
   title         String 
   description   String? 

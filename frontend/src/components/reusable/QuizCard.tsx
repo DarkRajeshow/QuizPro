@@ -12,7 +12,8 @@ import {
     ChevronRight,
     Lock,
     Unlock,
-    Info
+    Info,
+    PencilIcon
 } from 'lucide-react';
 
 interface QuizCardProps {
@@ -121,7 +122,7 @@ const QuizCard: React.FC<QuizCardProps> = ({
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="absolute top-4 left-4 bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs flex items-center"
+                        className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs flex items-center"
                     >
                         <Clock className="w-3 h-3 mr-1" />
                         Not Started
@@ -132,7 +133,7 @@ const QuizCard: React.FC<QuizCardProps> = ({
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="absolute top-4 left-4 bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs flex items-center"
+                        className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs flex items-center"
                     >
                         <Lock className="w-3 h-3 mr-1" />
                         Expired
@@ -143,7 +144,7 @@ const QuizCard: React.FC<QuizCardProps> = ({
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="absolute top-4 left-4 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs flex items-center"
+                        className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs flex items-center"
                     >
                         <Unlock className="w-3 h-3 mr-1" />
                         Active
@@ -213,8 +214,18 @@ const QuizCard: React.FC<QuizCardProps> = ({
             }}
             className="relative bg-white rounded-xl shadow-lg overflow-hidden transform transition-all duration-300 hover:shadow-2xl"
         >
-            {renderQuizStatusBadge()}
-
+            <div className='absolute top-4 left-4 flex items-center justify-start gap-2 w-full'>
+                {renderQuizStatusBadge()}
+                {isUserQuize && <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    onClick={() => navigate(`/quizzes/${id}`)}
+                    className="bg-blue-100 text-blue-900 px-2 py-1 rounded-full text-xs flex items-center gap-1 cursor-pointer"
+                >
+                    <PencilIcon className='size-3' />
+                    Edit
+                </motion.div>}
+            </div>
             {/* Card Content */}
             <div className="p-6">
                 <div className="flex justify-between items-start mb-4 mt-3">

@@ -18,6 +18,7 @@ import QuizzesPage from './pages/QuizzesPage';
 import QuizResultsPage from './pages/QuizResultsPage';
 import MyAttemptsPage from './pages/MyAttemptsPage';
 import RegisterPage from './pages/RegisterPage';
+import QuizUpdateForm from './components/admin/QuizUpdateForm';
 
 // Authentication Context
 export const AuthContext = React.createContext<{
@@ -157,6 +158,15 @@ const App: React.FC = () => {
               element={
                 <ProtectedRoute allowedRoles={['ADMIN', 'QUIZ_MAKER']}>
                   <QuizCreationForm />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/quizzes/:quizId"
+              element={
+                <ProtectedRoute allowedRoles={['ADMIN', 'QUIZ_MAKER']}>
+                  <QuizUpdateForm />
                 </ProtectedRoute>
               }
             />

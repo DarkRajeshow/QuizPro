@@ -39,6 +39,15 @@ export const api = {
   async createQuiz(quizData: Partial<Quiz>) {
     return this.request('/quizzes', 'POST', quizData);
   },
+  // Quiz Operations
+  async updateQuiz(quizId: string, quizData: Partial<Quiz>) {
+    return this.request(`/quizzes/${quizId}`, 'PUT', quizData);
+  },
+
+
+
+
+
 
   async getQuizzes() {
     return this.request('/quizzes');

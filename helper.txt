@@ -1,10 +1,29 @@
 
 # next features to build
-1. Add Link to each quiz, to share it. ____done  
-2. Allow more type of questions to create ____done
-3. Add new user called quiz_taker ____done
-4. Create a setting section for each quiz - choose several of the following items to include: you can keep feature for limiting the number of times the quiz can be taken by a user, start and expiration dates for the quiz, and a time limit to complete the quiz.
-____done added max-limits for attempts and 
+1. Add Link to each quiz, to share it. ____done   
+2. Allow more type of questions to create ____done [Fill_in_blank, Multi_Choice]
+3. Add new user called quiz_taker ____done   [Admin, QUIZ_TAKER, QUIZ_MAKER]
+4. choose several of the following items to include: you can keep feature for limiting the number of times the quiz can be taken by a user, start and expiration dates for the quiz, and a time limit to complete the quiz. ____done
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

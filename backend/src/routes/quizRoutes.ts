@@ -1,10 +1,11 @@
 import express from 'express';
 import { authenticateToken } from '../middleware/authMiddleware';
-import { createQuiz, getAllQuizzes, getPopularQuizzes, getQuizById, getUserQuizzes } from '../controllers/quizController';
+import { createQuiz, getAllQuizzes, getPopularQuizzes, getQuizById, getUserQuizzes, updateQuizById } from '../controllers/quizController';
 
 const router = express.Router();
 
 router.post('/', authenticateToken, createQuiz);
+router.put('/:quizId', authenticateToken, updateQuizById);
 
 
 //get
